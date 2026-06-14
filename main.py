@@ -1,3 +1,8 @@
+import csv
+import os
+
+DATA_FILE = os.path.join(os.path.dirname(__file__), "data.csv")
+
 def get_float(prompt):
     while True:
         try:
@@ -5,22 +10,41 @@ def get_float(prompt):
         except ValueError:
             print("please enter a number")
 
-print(r'''
+def save(expenses, filename=DATA_FILE):
+    with open(filename, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=["name", "amount"])
+        writer.writeheader()
+        for exp in expenses:
+            writer.writerow(exp)
+
+def load(filename=DATA_FILE):
+    expenses = []
+    try:
+        with open(filename, "r") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                expenses.append({"name": row["name"], "amount": float(row["amount"])})
+    except FileNotFoundError:
+        pass
+    return expenses
+
+print('''
 ┏┓ ╻ ╻╺┳┓┏━╸┏━╸╺┳╸╻┏┓╻┏━╸   ┏━┓┏━┓┏━┓
 ┣┻┓┃ ┃ ┃┃┃╺┓┣╸  ┃ ┃┃┗┫┃╺┓   ┣━┫┣━┛┣━┛
 ┗━┛┗━┛╺┻┛┗━┛┗━╸ ╹ ╹╹ ╹┗━┛   ╹ ╹╹  ╹  
 ''')
 
 monthly = get_float("enter monthly revenue: ")
+expenses = load()
 spent = 0
-expenses = []
+for e in expenses:
+    spent += e["amount"]
 
 while True:
     name = input("enter name of the expense (done = stop): ")
 
     if name == "done":
         print(f"you spent {spent:.2f} and have {monthly - spent:.2f} left behind")
-        print(expenses)
         totals = {}
 
         for e in expenses:
@@ -39,6 +63,8 @@ while True:
             print("you can survive")
         else:
             print("you spent too much")
+
+        save(expenses)
         break
 
     else:
